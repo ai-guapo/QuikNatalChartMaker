@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Natal Chart Calculator</title>
+  <script type="text/javascript" src="../lib/ephemeris-1.2.1.bundle.js" charset="utf-8"></script>
+  <script type="text/javascript" src="../lib/astrochart.js" charset="utf-8"></script>
+  <script type="text/javascript" src="../lib/moment.min.js" charset="utf-8"></script>
+  <script type="text/javascript" src="../lib/moment-timezone.min.js" charset="utf-8"></script>
+  <script type="text/javascript" src="../lib/tz-lookup.min.js" charset="utf-8"></script>
+  <script type="text/javascript" src="./script.js" charset="utf-8"></script>
+  <style>
+    body {
+      background: linear-gradient(180deg, #2a1b3d, #0d3b44, #1a2639);
+      color: #e0e0e0;
+      font-family: sans-serif; /* Changed from 'Inter', sans-serif; to use a common system font */
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      max-width: 1280px;
+      width: 100%;
+    }
+
+    #form {
+      background: rgba(255, 255, 255, 0.03);
+      background-image: url('../assets/bg.jpg');
+      background-size: cover;
+      background-position: center;
+      border: 2px solid #8c7ae6;
+      border-radius: 8px;
+      padding: 8px;
+      width: 600px;
+      height: 600px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #form > .form-group:first-child { /* For the moved chart select */
+        align-self: flex-start;
+        width: auto;
+        margin-bottom: 10px;
+        padding: 0;
+    }
+
+    #form h2 {
+      color: #ffffff;
+      text-align: center;
+      margin-bottom: 8px;
+      font-size: 20px;
+      text-transform: none; /* Changed from 'uppercase' to 'none' to preserve original casing */
+      letter-spacing: 2px;
+      width: 100%;
+    }
+
+    #form label {
+      color: #ffffff;
+      font-size: 12px;
+      margin-bottom: 2px;
+      display: block;
+      text-align: center;
+      min-height: 20px;
+    }
+
+    #form input,
+    #form select {
+      background: #3a3a5a;
+      border: 1px solid #4a4a6a;
+      color: #ffffff;
+      padding: 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      width: 120px;
+      transition: border-color 0.3s;
+      text-shadow: none;
+    }
+
+    #date::-webkit-calendar-picker-indicator,
+    #time::-webkit-calendar-picker-indicator {
+      filter: invert(100%);
+      cursor: pointer;
+    }
+
+    #place { width: 150px; }
+    #name-input { width: 150px; text-align: center; }
+
+    #form .form-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: nowrap;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    #form .form-group {
+      flex: 0 1 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    #form button {
+      background: #9b59b6;
+      color: #ffffff;
+      border: none;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: 8px;
+      width: 200px;
+    }
+    #form button:hover { background: #8e44ad; }
+
+    #suggestions {
+      display: none; position: absolute; top: 100%; left: 0;
+      background: #3a3a5a; border: 1px solid #4a4a6a; border-radius: 4px;
+      max-height: 150px; overflow-y: auto; width: 150px; z-index: 1000;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    #suggestions div {
+      padding: 6px; cursor: pointer; color: #e0e0e0; font-size: 12px;
+      border-bottom: 1px solid #4a4a6a;
+    }
+    #suggestions div:last-child { border-bottom: none; }
+    #suggestions div:hover { background: #4a4a6a; }
+
+    #chart-area-container {
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+
+    #form #chart-select { /* Styles for the chart select dropdown itself */
+      background: #3a3a5a; border: 1px solid #4a4a6a; color: #e0e0e0;
+      padding: 6px 10px; border-radius: 4px; font-size: 14px; width: 150px;
+      text-align: center;
+      -webkit-appearance: none; -moz-appearance: none; appearance: none;
+      background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20255%20255%22%3E%3Cpolygon%20fill%3D%22%23e0e0e0%22%20points%3D%220%2C63.75%20127.5%2C191.25%20255%2C63.75%22%2F%3E%3C%2Fsvg%3E');
+      background-repeat: no-repeat; background-position: right 8px center;
+      background-size: 12px; cursor: pointer;
+    }
+
+    #paper {
+      background: #ffffff; width: 600px; height: 600px;
+      border: 2px solid #9b59b6; border-radius: 8px; overflow: hidden;
+      user-select: none; position: relative;
+    }
+    #placeholder {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      color: #4a90e2; font-size: 16px; text-align: center; pointer-events: none;
+    }
+    #download-btn {
+      display: none; position: absolute; top: 10px; left: 10px;
+      width: 24px; height: 24px; background: #9b59b6;
+      border: 1px solid #9b59b6; border-radius: 4px; color: #e0e0e0;
+      font-size: 12px; line-height: 24px; text-align: center;
+      cursor: pointer; z-index: 10; transition: background 0.3s;
+    }
+    #download-btn:hover { background: #4a90e2; }
+    #download-btn::before { content: '↓'; font-weight: bold; text-shadow: 0 0 3px #e0e0e0; }
+
+    hr {
+      border: 0; height: 1px;
+      background-image: linear-gradient(to right, rgba(0,0,0,0), #8c7ae6, rgba(0,0,0,0));
+      width: 100%; margin: 16px 0;
+    }
+
+    #bodies {
+      background-color: #2a2a4a; border: 2px solid #8c7ae6;
+      border-radius: 12px; width: 100%; max-width: 1280px;
+      overflow-x: auto; padding: 8px; box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+    }
+    #bodies table {
+      width: 100%; border-collapse: collapse; color: #e0e0e0; margin-bottom: 16px;
+      background-color: #3a3a5a; border-radius: 8px; overflow: hidden;
+    }
+    #bodies th, #bodies td {
+      padding: 10px; text-align: center; border: 1px solid #4a4a6a; font-size: 12px;
+    }
+    #bodies th {
+      background-color: #8c7ae6; color: #ffffff;
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    #bodies td { background-color: #3a3a5a; }
+    #bodies tr:nth-child(even) td { background-color: #333355; }
+    #bodies .divider { border-top: 2px solid #8c7ae6; margin: 8px 0; }
+    .astro-symbol { font-size: 16px; color: #8c7ae6; display: block; margin-top: 4px; }
+
+    #error-message, #name-error-message {
+      color: #ff6b6b; margin-top: 8px; font-size: 12px; text-align: center; display: none;
+    }
+
+    .checkbox-group { display: flex; align-items: center; gap: 5px; margin-top: 5px; }
+    .checkbox-group label {
+      margin-bottom: 0; min-height: auto; text-align: left;
+      font-size: 11px; color: #e0e0e0;
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: 14px; height: 14px; margin: 0; cursor: pointer;
+      background: #1a2639; border: 1px solid #9b59b6;
+      border-radius: 3px; outline: none; transition: background 0.2s, border-color 0.2s;
+    }
+    .checkbox-group input[type="checkbox"]:checked {
+      background: #4a90e2; border-color: #4a90e2;
+    }
+
+    #interpretation-link {
+      display: none; margin-top: 15px; color: #8c7ae6;
+      text-decoration: underline; cursor: pointer; font-size: 14px;
+    }
+    #interpretation-link:hover { color: #9b59b6; }
+
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.7); display: flex; justify-content: center;
+      align-items: center; z-index: 10000; backdrop-filter: blur(5px);
+    }
+    .modal-content {
+      background: #2a2a4a; border: 2px solid #8c7ae6; border-radius: 8px;
+      padding: 20px; max-width: 80%; max-height: 80%; overflow-y: auto;
+      color: #e0e0e0; position: relative; font-family: sans-serif; /* Changed from 'Inter', sans-serif; */
+      box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    }
+    .modal-close-button {
+      position: absolute; top: 10px; right: 15px; background: none; border: none;
+      font-size: 24px; color: #e0e0e0; cursor: pointer; transition: color 0.2s;
+    }
+    .modal-close-button:hover { color: #ff6b6b; }
+    .modal-content h2 { /* Targeting the h2 in the modal specifically if needed */
+        color: #8c7ae6; /* Example: Match other purple tones */
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    .modal-content h3 {
+      background-color: #8c7ae6; color: #ffffff; padding: 12px;
+      text-align: left; font-weight: bold; text-transform: uppercase;
+      letter-spacing: 0.5px; margin-top: 0; margin-bottom: 10px;
+      border-bottom: none; padding-bottom: 12px;
+    }
+    .modal-content p { margin-bottom: 8px; line-height: 1.4; }
+    .modal-content p strong { color: #9b59b6; }
+
+    .form-row[style*="margin-top: 15px; border: 1px solid #9b59b6;"] {
+        border: 1px solid #8c7ae6 !important; background-color: transparent;
+    }
+    .form-row[style*="margin-top: 15px; border: 1px solid #9b59b6;"] label {
+        color: #ffffff !important;
+    }
+
+    .credits-section {
+        width: 100%;
+        max-width: 1280px;
+        text-align: center;
+        margin-top: 30px;
+        padding: 15px;
+        background-color: rgba(42, 42, 74, 0.5); /* #2a2a4a with some transparency */
+        border-top: 1px solid #8c7ae6;
+        font-size: 12px;
+        color: #e0e0e0;
+    }
+    .credits-section h4 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        color: #ffffff;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    .credits-section ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+    .credits-section li {
+        margin-bottom: 5px;
+    }
+    .credits-section a {
+        color: #9b59b6;
+        text-decoration: none;
+    }
+    .credits-section a:hover {
+        text-decoration: underline;
+        color: #8c7ae6;
+    }
+
+    @media (max-width: 1280px) {
+      .container { flex-direction: column; align-items: center; }
+      #form, #paper { width: 100%; max-width: 600px; }
+    }
+
+    input:-webkit-autofill,
+    input:-webkit-autofill:hover,
+    input:-webkit-autofill:focus,
+    input:-webkit-autofill:active {
+      -webkit-box-shadow: 0 0 0 30px #1a2639 inset !important;
+      -webkit-text-fill-color: #e0e0e0 !important;
+    }
+  </style>
+  </head>
+<body>
+  <div class="container">
+    <form id="form">
+      <div class="form-group">
+        <select id="chart-select" aria-label="Select Chart Slot">
+          <option value="1">Chart 1:</option>
+          <option value="2">Chart 2:</option>
+          <option value="3">Chart 3:</option>
+          <option value="4">Chart 4:</option>
+          <option value="5">Chart 5:</option>
+          <option value="6">Chart 6:</option>
+          <option value="7">Chart 7:</option>
+          <option value="8">Chart 8:</option>
+          <option value="9">Chart 9:</option>
+          <option value="10">Chart 10:</option>
+        </select>
+      </div>
+
+      <h2>QuikNatalChartMaker</h2> <div style="height: 20px;"></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="name-input">Name</label>
+          <input id="name-input" name="name" type="text" maxlength="20" autocomplete="off">
+          <div id="name-error-message" class="error-message"></div>
+        </div>
+        <div class="form-group checkbox-group">
+          <input type="checkbox" id="clear-current-chart-checkbox">
+          <label for="clear-current-chart-checkbox">Clear this chart slot?</label>
+        </div>
+      </div>
+
+      <div style="height: 20px;"></div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label for="place">Place of birth</label>
+          <input id="place" name="birth-place" type="text" list="place-suggestions" autocomplete="off" required>
+          <datalist id="place-suggestions"></datalist>
+          <div id="suggestions"></div>
+        </div>
+        <div class="form-group">
+          <label for="date">Date of birth</label>
+          <input id="date" name="date" type="date" placeholder="MM-DD-YYYY" required>
+        </div>
+        <div class="form-group">
+          <label for="time">Time of birth</label>
+          <input id="time" name="time" type="time" placeholder="HH:mm" pattern="[0-2][0-9]:[0-5][0-9]" required>
+        </div>
+        <div class="form-group">
+          <label for="house-system">House System</label>
+          <select id="house-system" name="house-system">
+            <option value="Equal" selected>Equal</option>
+            <option value="Whole">Whole Sign</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row" style="margin-top: 15px; border: 1px solid #8c7ae6; border-radius: 8px; padding: 10px; flex-wrap: wrap; justify-content: center;">
+          <label style="width: 100%; text-align: center; margin-bottom: 10px; font-weight: bold; color: #ffffff !important;">Aspect Orb Settings</label>
+          <div class="form-group" style="flex-direction: row; align-items: center; gap: 5px;">
+              <label for="orb-conjunction" style="margin-bottom: 0;">Conjunction:</label>
+              <select id="orb-conjunction" name="orb-conjunction" style="width: 60px;">
+                  <option value="0">0°</option><option value="1">1°</option><option value="2">2°</option><option value="3">3°</option><option value="4">4°</option>
+                  <option value="5">5°</option><option value="6">6°</option><option value="7">7°</option><option value="8">8°</option><option value="9">9°</option>
+                  <option value="10" selected>10°</option>
+              </select>
+          </div>
+          <div class="form-group" style="flex-direction: row; align-items: center; gap: 5px;">
+              <label for="orb-opposition" style="margin-bottom: 0;">Opposition:</label>
+              <select id="orb-opposition" name="orb-opposition" style="width: 60px;">
+                <option value="0">0°</option><option value="1">1°</option><option value="2">2°</option><option value="3">3°</option><option value="4">4°</option>
+                <option value="5">5°</option><option value="6">6°</option><option value="7">7°</option><option value="8">8°</option><option value="9">9°</option>
+                <option value="10" selected>10°</option>
+              </select>
+          </div>
+          <div class="form-group" style="flex-direction: row; align-items: center; gap: 5px;">
+              <label for="orb-trine" style="margin-bottom: 0;">Trine:</label>
+              <select id="orb-trine" name="orb-trine" style="width: 60px;">
+                <option value="0">0°</option><option value="1">1°</option><option value="2">2°</option><option value="3">3°</option><option value="4">4°</option>
+                <option value="5">5°</option><option value="6">6°</option><option value="7">7°</option><option value="8">8°</option>
+                <option value="9" selected>9°</option><option value="10">10°</option>
+              </select>
+          </div>
+          <div class="form-group" style="flex-direction: row; align-items: center; gap: 5px;">
+              <label for="orb-square" style="margin-bottom: 0;">Square:</label>
+              <select id="orb-square" name="orb-square" style="width: 60px;">
+                <option value="0">0°</option><option value="1">1°</option><option value="2">2°</option><option value="3">3°</option><option value="4">4°</option>
+                <option value="5">5°</option><option value="6">6°</option><option value="7">7°</option><option value="8">8°</option>
+                <option value="9" selected>9°</option><option value="10">10°</option>
+              </select>
+          </div>
+          <div class="form-group" style="flex-direction: row; align-items: center; gap: 5px;">
+              <label for="orb-sextile" style="margin-bottom: 0;">Sextile:</label>
+              <select id="orb-sextile" name="orb-sextile" style="width: 60px;">
+                <option value="0">0°</option><option value="1">1°</option><option value="2">2°</option><option value="3">3°</option><option value="4">4°</option>
+                <option value="5">5°</option><option value="6" selected>6°</option><option value="7">7°</option><option value="8">8°</option>
+                <option value="9">9°</option><option value="10">10°</option>
+              </select>
+          </div>
+      </div>
+
+      <button type="submit">Generate Chart</button>
+      <a href="#" id="interpretation-link">Read basic interpretation</a>
+      <div class="form-row" style="justify-content: flex-end; width: 100%; margin-top: 10px;">
+        <div class="form-group checkbox-group">
+          <input type="checkbox" id="wipe-all-charts-checkbox">
+          <label for="wipe-all-charts-checkbox">Wipe ALL chart slots?</label>
+        </div>
+      </div>
+    </form>
+    <div id="chart-area-container">
+      <div id="paper">
+        <div id="placeholder">Please input information to generate chart</div>
+        <button id="download-btn" title="Download Chart as SVG"></button>
+      </div>
+    </div>
+  </div>
+  <hr>
+  <div id="bodies">
+    <table>
+      <thead>
+        <tr>
+          <th></th><th>Sun</th><th>Moon</th><th>Mercury</th><th>Venus</th><th>Mars</th>
+          <th>Jupiter</th><th>Saturn</th><th>Uranus</th><th>Neptune</th><th>Pluto</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Degrees</td><td id="sun-dms"></td><td id="moon-dms"></td><td id="mercury-dms"></td>
+          <td id="venus-dms"></td><td id="mars-dms"></td><td id="jupiter-dms"></td>
+          <td id="saturn-dms"></td><td id="uranus-dms"></td><td id="neptune-dms"></td><td id="pluto-dms"></td>
+        </tr>
+        <tr>
+          <td>Zodiac Sign</td><td id="sun-sign"></td><td id="moon-sign"></td><td id="mercury-sign"></td>
+          <td id="venus-sign"></td><td id="mars-sign"></td><td id="jupiter-sign"></td>
+          <td id="saturn-sign"></td><td id="uranus-sign"></td><td id="neptune-sign"></td><td id="pluto-sign"></td>
+        </tr>
+        <tr>
+          <td>Astro Symbol</td><td id="sun-symbol"></td><td id="moon-symbol"></td><td id="mercury-symbol"></td>
+          <td id="venus-symbol"></td><td id="mars-symbol"></td><td id="jupiter-symbol"></td>
+          <td id="saturn-symbol"></td><td id="uranus-symbol"></td><td id="neptune-symbol"></td><td id="pluto-symbol"></td>
+        </tr>
+        <tr>
+          <td>Motion</td><td></td><td></td><td id="mercury-motion"></td><td id="venus-motion"></td>
+          <td id="mars-motion"></td><td id="jupiter-motion"></td><td id="saturn-motion"></td>
+          <td id="uranus-motion"></td><td id="neptune-motion"></td><td id="pluto-motion"></td>
+        </tr>
+        <tr class="divider"><td colspan="11"></td></tr>
+        <tr class="moon-phase-row">
+          <td>Moon Phase</td><td colspan="5" id="moon-direction"></td><td colspan="5" id="moon-shape"></td>
+        </tr>
+      </tbody>
+    </table>
+    <table>
+      <thead>
+        <tr>
+          <th></th><th class="house-cusp-th">I</th><th class="house-cusp-th">II</th><th class="house-cusp-th">III</th>
+          <th class="house-cusp-th">IV</th><th class="house-cusp-th">V</th><th class="house-cusp-th">VI</th>
+          <th class="house-cusp-th">VII</th><th class="house-cusp-th">VIII</th><th class="house-cusp-th">IX</th>
+          <th class="house-cusp-th">X</th><th class="house-cusp-th">XI</th><th class="house-cusp-th">XII</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="house-cusps-row">
+          <td>House Cusps</td><td id="cusp-1" class="house-cusp-td"></td><td id="cusp-2" class="house-cusp-td"></td>
+          <td id="cusp-3" class="house-cusp-td"></td><td id="cusp-4" class="house-cusp-td"></td>
+          <td id="cusp-5" class="house-cusp-td"></td><td id="cusp-6" class="house-cusp-td"></td>
+          <td id="cusp-7" class="house-cusp-td"></td><td id="cusp-8" class="house-cusp-td"></td>
+          <td id="cusp-9" class="house-cusp-td"></td><td id="cusp-10" class="house-cusp-td"></td>
+          <td id="cusp-11" class="house-cusp-td"></td><td id="cusp-12" class="house-cusp-td"></td>
+        </tr>
+        <tr class="divider"><td colspan="13"></td></tr>
+        <tr class="four-angles-row">
+          <td>The Four Angles</td><td id="angle-asc" class="four-angles-td" colspan="3"></td>
+          <td id="angle-ds" class="four-angles-td" colspan="3"></td><td id="angle-mc" class="four-angles-td" colspan="3"></td>
+          <td id="angle-ic" class="four-angles-td" colspan="3"></td>
+        </tr>
+      </tbody>
+    </table>
+    <table id="aspects-table">
+      <thead>
+        <tr><th colspan="6">Major Aspects</th></tr>
+        <tr>
+          <th>Planet 1</th><th>Degree/Sign</th><th>Aspect</th>
+          <th>Planet 2</th><th>Degree/Sign</th><th>Orb</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div id="error-message"></div>
+
+  </body>
+</html>
