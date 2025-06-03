@@ -1,7 +1,5 @@
-<div align="center">
-<h1><b>QuikNatalChartMaker</b></h1>
-  <img src="https://github.com/user-attachments/assets/83dd6255-fc39-4a30-a5e1-0062382209ba" alt="image"></div>
-<hr>
+<div align="center">  
+  <img src="https://github.com/user-attachments/assets/5bb4fbcc-ed0c-4b8d-8b92-e07ec6489663" alt="QuikChartMaker"></div>
   <p><b>QuikNatalChartMaker</b> is a secure, privacy-first browser extension for generating comprehensive tropical astrological natal charts and interpretations. All calculations are performed entirely in your browser, ensuring your personal birth information — and that of your friends and family — remains safe from online data miners.
 
 This extension supports two ancient house systems: Whole Sign and Equal Houses. It calculates the precise positions and major aspects (Conjunction, Opposition, Trine, Square, and Sextile) for the Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn, Uranus, Neptune, and Pluto. Empower yourself to quickly create detailed charts and receive basic interpretations without ever compromising your privacy.</p><hr>
@@ -11,12 +9,13 @@ This extension supports two ancient house systems: Whole Sign and Equal Houses. 
 
 ![ScreenShot2](https://github.com/user-attachments/assets/a1b3c9e6-9850-4d20-90db-3b320c67b204)
 <hr>
-<small>
-**Acknowledgements & Credits**
-
+<sub><sup>**Acknowledgements & Credits**
+<br>
 This tool utilizes data and code from the following open-source projects and resources:
-
-* **AstroChart.js** by Kibo: [github.com/Kibo/AstroChart](https://github.com/Kibo/AstroChart)
-* **Moshier Ephemeris JS** by 0xStarcat (adapted from Moshier): [github.com/0xStarcat/Moshier-Ephemeris-JS](https://github.com/0xStarcat/Moshier-Ephemeris-JS)
-* **World Cities Database** by SimpleMaps: [simplemaps.com/data/world-cities](https://simplemaps.com/data/world-cities)
-</small>
+<br>
+<b>AstroChart.js</b> by Kibo: https://github.com/Kibo/AstroChart
+<br>
+<b>Moshier Ephemeris JS</b> by 0xStarcat: https://github.com/0xStarcat/Moshier-Ephemeris-JS
+<br>
+<b>World Cities Database</b> by SimpleMaps: https://simplemaps.com/data/world-cities
+  </sub></sup>
